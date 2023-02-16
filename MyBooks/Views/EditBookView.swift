@@ -9,27 +9,26 @@ import SwiftUI
 
 struct EditBookView: View {
     
-    @Environment(\.managedObjectContext) var moc
-    @Environment(\.dismiss) var dismiss
+    @ObservedObject private var detailBookVM: DetailBookViewModel
+    //@ObservedObject var book: Book
     
-    var book: FetchedResults<Book>.Element
+    init(vm: DetailBookViewModel) {
+         self.detailBookVM = vm
+     }
+   
+   @Environment(\.managedObjectContext) var viewContext
+   @Environment(\.dismiss) var dismiss
+
+   // var book: FetchedResults<Book>.Element
     
-    @State private var name = ""
-    @State private var author = ""
-    @State private var comments = ""
-    @State private var startDate = Date()
-    @State private var finishDate = Date()
-    @State private var isFavourite = false
-    @State private var range = 0.0
-    @State private var image = UIImage(imageLiteralResourceName: "boy")
-    @State private var readingNow = false
-    @State private var imagePicker = false
-    
+
+   @State private var imagePicker = false
+
     var body: some View {
-        Form {
+       VStack {
             Section {
                 HStack {
-                    Image(uiImage: UIImage(data: book.image!)!)
+                    Image(uiImage: detailBookVM.image)
                         .resizable()
                         .scaledToFit()
                         .edgesIgnoringSafeArea(.all)
@@ -37,71 +36,70 @@ struct EditBookView: View {
                         .shadow(radius: 10)
                         .padding(15)
                         .onAppear {
-                            image = UIImage(data: book.image!)!
+                            detailBookVM.image = UIImage(data: (detailBookVM.book!.image!))!
                         }
                     Button {
                         imagePicker.toggle()
                     } label: {
                         Text("Змінити світлину")
                     }.sheet(isPresented: $imagePicker) {
-                        ImagePickerView(selectedImage: $image)
+                        ImagePickerView(selectedImage: $detailBookVM.image)
                     }
                 }
             }
             Section {
-                TextField("\(book.name!)", text: $name)
+                TextField((detailBookVM.book!.name)!, text: $detailBookVM.name)
                     .onAppear {
-                        name = book.name!
+                        detailBookVM.name = detailBookVM.book!.name ?? ""
                     }
-                TextField("\(book.author!)", text: $author)
+                TextField((detailBookVM.author), text: $detailBookVM.author)
                     .onAppear {
-                        author = book.author!
+                        detailBookVM.author = detailBookVM.book?.author ?? ""
                     }
                 
-                TextEditor(text: $comments)
+                TextEditor(text: $detailBookVM.comments)
                     .onAppear {
-                        comments = book.comments ?? ""
+                        detailBookVM.comments = detailBookVM.book?.comments ?? ""
                     }
                     .lineLimit(nil)
             }
             Section {
-                DatePicker("Початок читання", selection: $startDate, displayedComponents: [.date])
+                DatePicker("Початок читання", selection: ($detailBookVM.startDate), displayedComponents: [.date])
                     .onAppear {
-                        startDate = book.startDate ?? Date()
+                        detailBookVM.startDate = detailBookVM.book?.startDate ?? Date()
                     }
-                DatePicker("Кінець читання", selection: $finishDate, displayedComponents: [.date])
+                DatePicker("Кінець читання", selection: $detailBookVM.finishDate, displayedComponents: [.date])
                     .onAppear {
-                        finishDate = book.finishDate ?? Date()
+                        detailBookVM.finishDate = detailBookVM.book?.finishDate ?? Date()
                     }
             }
             Section {
-                Toggle(isOn: $readingNow) {
+                Toggle(isOn: $detailBookVM.readingNow) {
                     Text("Читаю зараз")
                 }.onAppear {
-                    readingNow = book.readingNow
+                    detailBookVM.readingNow = detailBookVM.book!.readingNow
                 }
                 VStack {
-                    Toggle(isOn: $isFavourite) {
-                        Text("Улюблена книжечка ❤️")
+                    Toggle(isOn: $detailBookVM.isFavourite) {
+                        Text("Улюблена книга ❤️")
                     }
                     .onAppear {
-                        isFavourite = book.isFavourite
+                        detailBookVM.isFavourite = detailBookVM.book!.isFavourite
                     }
-                    
-                    Text("Оцінка: \(Int(range))")
-                    Slider(value: $range, in: 0...5, step: 1)
-                }
-                .onAppear {
-                    range = Double(book.range)
+                    RatingView(range: $detailBookVM.range)
+                    .onAppear {
+                        detailBookVM.range = Int(detailBookVM.book!.range)
+                    }
                 }
                 .padding()
             }
+      
             Section {
                 HStack {
                     Spacer()
                     Button("Зберегти 📚") {
-                        DataController().editBook(book: book, name: name, image: image, author: author, startDate: startDate, comments: comments, finishDate: finishDate, isFavourite: isFavourite, readingNow: readingNow, range: Int(range), context: moc)
-                        dismiss()
+                        detailBookVM.editBook(book: detailBookVM.book!, name: detailBookVM.name, image: detailBookVM.image, author: detailBookVM.author, startDate: detailBookVM.startDate, comments: detailBookVM.comments, finishDate: detailBookVM.finishDate, isFavourite: detailBookVM.isFavourite, readingNow: detailBookVM.readingNow, range: Int(detailBookVM.range))
+                        self.dismiss()
                     }
                     Spacer()
                 }
@@ -110,3 +108,9 @@ struct EditBookView: View {
     }
 }
 
+//struct EditBookView_Previews: PreviewProvider {
+//    static var previews: some View {
+//        let viewContext = DataController.shared.container.viewContext
+//        EditBookView(vm: EditBookViewModel(context: viewContext), book: book)
+//    }
+//}

@@ -1,14 +1,24 @@
 //
-//  Date.swift
+//  Date + Extension.swift
 //  MyBooks
 //
-//  Created by Alisa Yakhnenko on 22.11.2022.
+//  Created by Alisa Yakhnenko on 13.02.2023.
 //
 
 import Foundation
 
 
 extension Date {
+    
+    func dateFormatter() -> String {
+        
+        let dateFormatter = DateFormatter()
+        dateFormatter.calendar = Calendar(identifier: .gregorian)
+        dateFormatter.dateFormat = "dd-MM-yy"
+        
+        let toString = dateFormatter.string(from: self)
+        return toString
+    }
     
     init(fromEpoch: Int) {
            let doubleValue = Double(fromEpoch)
@@ -23,4 +33,3 @@ extension Date {
        }
 
 }
- 

@@ -10,27 +10,27 @@ import CoreData
 
 struct ContentView: View {
     
-    @Environment(\.managedObjectContext) var moc
-    @FetchRequest(sortDescriptors: [SortDescriptor(\.finishDate, order: .reverse)]) var book: FetchedResults<Book>
-    
+    @Environment(\.managedObjectContext) var viewContext
+   // @FetchRequest(sortDescriptors: [SortDescriptor(\.finishDate, order: .reverse)]) var book: FetchedResults<Book>
+    @StateObject private var viewModel = DataController.shared
     
     @State private var selectedView = 1
     
     var body: some View {
         TabView(selection: $selectedView) {
-            BookList()
+            BookList(vm: BookListViewModel(context: viewContext))
                 .tabItem {
                     Image(systemName: "book.fill")
                     Text("Книжки")
                 }.tag(1)
             
-            FavouriteBookList()
-                .tabItem {
-                    Image(systemName: "heart.fill")
-                    Text("Улюблене")
-                }.tag(2)
-           
-        }
+//            FavouriteBookList()
+//                .tabItem {
+//                    Image(systemName: "heart.fill")
+//                    Text("Улюблене")
+//                }.tag(2)
+//
+       }
         
     }
         
