@@ -11,8 +11,6 @@ import CoreData
 
 class DataController: ObservableObject {
     
-   
-    
    static let shared = DataController()
     let container: NSPersistentContainer
     
@@ -24,9 +22,9 @@ class DataController: ObservableObject {
                 print("Failed to load the data \(error.localizedDescription)")
             }
         }
-        //bookListViewModel.fetchBooks()
+        
     }
-  //  let bookListViewModel = BookListViewModel(context: DataController.shared.container.viewContext)
+ 
     
     
    

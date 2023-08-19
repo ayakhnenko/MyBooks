@@ -5,23 +5,56 @@
 //  Created by Alisa Yakhnenko on 11.02.2023.
 //
 
-import Foundation
+//import Foundation
 import CoreData
-import UIKit
+import SwiftUI
 
 
-@MainActor
+
 class BookListViewModel: NSObject, ObservableObject {
-    
-    
-  @Published var books: [BookViewModel] = []
+   
+    private var storage = NavigationStorage.shared
+    @Published var books: [BookModel] = []
+    @Published var favBooks: [BookModel] = []
     private (set) var context: NSManagedObjectContext
     private var fetchResultsController: NSFetchedResultsController<Book>
+    
+    public var arrayYears: [String] {
+         var years = [String]()
+        for book in books {
+            years.append(book.finishDate.dateYear())
+            years = Array(Set(years))
+            years.sort { $0 > $1 }
+        }
+        return years
+    }
+    
+    @Published var name = ""
+    @Published var author = ""
+    @Published var comments = ""
+    @Published var startDate = Date()
+    @Published var finishDate = Date()
+    @Published var isFavourite = false
+    @Published var range = 0
+    @Published var image = UIImage(imageLiteralResourceName: "boy")
+    @Published var readingNow = false
+    @Published var isNotFinish = false
+
+    
+    func bookCounter(year: String) -> Int {
+        var count = 0
+        for book in books {
+            if book.finishDate.dateYear() == year && book.readingNow == false  && book.isNotFinish == false {
+                count += 1
+            }
+        }
+        return count
+    }
     
     init(context: NSManagedObjectContext) {
         self.context = context
         
-       fetchResultsController = NSFetchedResultsController(fetchRequest: Book.all, managedObjectContext: context, sectionNameKeyPath: nil, cacheName: nil)
+        fetchResultsController = NSFetchedResultsController(fetchRequest: Book.all, managedObjectContext: context, sectionNameKeyPath: nil, cacheName: nil)
         super.init()
         fetchResultsController.delegate = self
         
@@ -30,8 +63,72 @@ class BookListViewModel: NSObject, ObservableObject {
             guard let books = fetchResultsController.fetchedObjects else {
                 return
             }
+            self.books = books.map(BookModel.init)
             
-            self.books = books.map(BookViewModel.init)
+        } catch {
+            print(error)
+        }
+        favBooks = books.filter({ $0.isFavourite })
+        print("Book list vm init")
+    }
+    
+
+   
+    func selectModelIntent(book: BookModel) {
+        storage.path.append(book)
+       // detailBookViewModelSpawn(book: book)
+    }
+    
+//    private (set) var detailBookViewModel: DetailBookViewModel?
+//
+//    func detailBookViewModelSpawn(book: BookViewModel) {
+//        detailBookViewModel = DetailBookViewModel(context: context, parent: self, book: book)
+//        storage.path.append(book)
+//
+//    }
+//
+//
+//    func detailBookViewModelDispose() {
+//        detailBookViewModel = nil
+//    }
+    
+    func addBook(name: String, image: UIImage, author: String, startDate: Date, comments: String, finishDate: Date, isFavourite: Bool, range: Int16, readingNow: Bool, isNotFinish: Bool) {
+        
+        do {
+            let book = Book(context: context)
+            book.id = UUID()
+            book.name = name
+            book.author = author
+            book.startDate = startDate
+            book.comments = comments
+            book.finishDate = finishDate
+            book.isFavourite = isFavourite
+            book.range = Int16(range)
+            book.image = image.jpegData(compressionQuality: 0.5)
+            book.readingNow = readingNow
+            book.isNotFinish = isNotFinish
+            
+            try book.save()
+        } catch {
+            print(error)
+        }
+     }
+    
+    func editBook(book: Book, name: String, image: UIImage, author: String, startDate: Date, comments: String, finishDate: Date, isFavourite: Bool, readingNow: Bool, range: Int, isNotFinish: Bool) {
+        
+        do {
+            book.name = name
+            book.author = author
+            book.comments = comments
+            book.startDate = startDate
+            book.finishDate = finishDate
+            book.isFavourite = isFavourite
+            book.range = Int16(range)
+            book.image = image.jpegData(compressionQuality: 0.5)
+            book.readingNow = readingNow
+            book.isNotFinish = isNotFinish
+            
+            try book.save()
         } catch {
             print(error)
         }
@@ -47,6 +144,12 @@ class BookListViewModel: NSObject, ObservableObject {
             print(error)
         }
     }
+    
+    
+    
+    deinit {
+        print("BookListViewModel deinit")
+    }
 }
     
 extension BookListViewModel: NSFetchedResultsControllerDelegate {
@@ -56,44 +159,25 @@ extension BookListViewModel: NSFetchedResultsControllerDelegate {
             return
             
         }
-        self.books = books.map(BookViewModel.init)
+        self.books = books.map(BookModel.init)
     }
 }
-    
-    
-//    func fetchBooks() {
-//        let request = NSFetchRequest<Book>(entityName: "Book")
-//
-//        do {
-//            savedEntities = try dataController.container.viewContext.fetch(request)
-//        } catch let error {
-//            print("Error fetching. \(error)")
-//        }
-//    }
-    
-//    func deleteBook(indexSet: IndexSet) {
-//        guard let index = indexSet.first else { return }
-//        let entity = savedEntities[index]
-//        dataController.container.viewContext.delete(entity)
-//        dataController.save()
-//    }
-//}
+  
 
-
-struct BookViewModel: Identifiable {
+struct BookModel: Identifiable, Hashable {
 
     public var book: Book
 
-    init(book: Book) {
-        self.book = book
-    }
-
+//    init(book: Book) {
+//        self.book = book
+//    }
+//
     var id: NSManagedObjectID {
         book.objectID
     }
 
     var image: UIImage {
-        UIImage(data: book.image!)!
+        UIImage(data: book.image!) ?? UIImage(imageLiteralResourceName: "boy")
         
     }
     var name: String {
@@ -108,7 +192,7 @@ struct BookViewModel: Identifiable {
         book.readingNow
     }
     var isFavourite: Bool {
-        book.isFavourite
+        book.isFavourite 
         
     }
     var comments: String {
@@ -123,8 +207,11 @@ struct BookViewModel: Identifiable {
         book.finishDate ?? Date()
         
     }
-    var range: Int16 {
+   var range: Int16 {
        book.range
         
+    }
+    var isNotFinish: Bool {
+        book.isNotFinish
     }
 }

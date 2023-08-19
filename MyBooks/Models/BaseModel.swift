@@ -34,13 +34,5 @@ extension BaseModel where Self: NSManagedObject {
         try save()
     }
     
-//    func save() {
-//        do {
-//            try DataController.shared.container.viewContext.save()
-//            bookListViewModel.fetchBooks()
-//            print("Data save")
-//        } catch {
-//            print("We could not save the data")
-//        }
-//    }
+
 }

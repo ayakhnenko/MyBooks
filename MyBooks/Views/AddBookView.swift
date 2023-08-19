@@ -10,23 +10,20 @@ import CoreData
 
 struct AddBookView: View {
     
-   @ObservedObject var detailBookVM: DetailBookViewModel
-   
-    init(vm: DetailBookViewModel) {
-        self.detailBookVM = vm
-    }
-   
-   // @Environment(\.managedObjectContext) var viewContext
-    @Environment(\.dismiss) var dismiss
-   
-   
-    @State private var imagePicker = false
+   @ObservedObject var vm: BookListViewModel
     
+//    init(vm: DetailBookViewModel) {
+//        self.vm = vm
+//    }
+   
+    @Environment(\.dismiss) var dismiss
+    @State private var imagePicker = false
+   
     var body: some View {
         Form {
             Section {
                 HStack {
-                    Image(uiImage: detailBookVM.image)
+                    Image(uiImage: vm.image)
                         .resizable()
                         .scaledToFit()
                         .edgesIgnoringSafeArea(.all)
@@ -39,7 +36,7 @@ struct AddBookView: View {
                         Text("Додати світлину")
                     })
                     .sheet(isPresented: $imagePicker) {
-                        ImagePickerView(selectedImage: $detailBookVM.image)
+                        ImagePickerView(selectedImage: $vm.image)
                     }
                 }
             }
@@ -47,29 +44,30 @@ struct AddBookView: View {
                 VStack {
                     HStack {
                         Text("Назва книги")
-                        TextField("", text: $detailBookVM.name)
+                        TextField("", text: $vm.name)
                     }
                     HStack {
                         Text("Писменник")
-                        TextField("", text: $detailBookVM.author)
+                        TextField("", text: $vm.author)
                     }
                     HStack {
                         Text("Коментар:")
-                        TextEditor(text: $detailBookVM.comments)
+                        TextEditor(text: $vm.comments)
                             .lineLimit(nil)
                     }
                 }.padding()
             }
             Section {
-                DatePicker("Початок читання", selection: $detailBookVM.startDate, displayedComponents: [.date])
-                DatePicker("Кінець читання", selection: $detailBookVM.finishDate, displayedComponents: [.date])
+                DatePicker("Початок читання", selection: $vm.startDate, displayedComponents: [.date])
+                DatePicker("Кінець читання", selection: $vm.finishDate, displayedComponents: [.date])
                 }
             Section {
-                Toggle("Читаю зараз", isOn: $detailBookVM.readingNow)
-                Toggle(("Улюблена книга ❤️"), isOn: $detailBookVM.isFavourite)
+                Toggle("Читаю зараз", isOn: $vm.readingNow)
+                Toggle(("Улюблена книга ❤️"), isOn: $vm.isFavourite)
+                Toggle("Не дочитала", isOn: $vm.isNotFinish)
                 HStack {
                     Spacer()
-                    RatingView(range: $detailBookVM.range)
+                    RatingView(range: $vm.range)
                     Spacer()
                 }
             }
@@ -77,9 +75,10 @@ struct AddBookView: View {
                HStack {
                     Spacer()
                    Button("Зберегти 📚") {
-                       detailBookVM.addBook(name: detailBookVM.name, image:  detailBookVM.image, author:  detailBookVM.author, startDate:  detailBookVM.startDate, comments:  detailBookVM.comments, finishDate:  detailBookVM.finishDate, isFavourite:  detailBookVM.isFavourite, range: Int16( detailBookVM.range), readingNow:  detailBookVM.readingNow)
-                       self.dismiss()
+                       vm.addBook(name: vm.name, image:  vm.image, author:  vm.author, startDate:  vm.startDate, comments:  vm.comments, finishDate:  vm.finishDate, isFavourite:  vm.isFavourite, range: Int16(vm.range), readingNow:  vm.readingNow, isNotFinish: vm.isNotFinish)
                        
+                     self.dismiss()
+                      
                    }
                    Spacer()
             
@@ -89,9 +88,3 @@ struct AddBookView: View {
     }
 }
 
-struct AddBookView_Previews: PreviewProvider {
-    static var previews: some View {
-        let viewContext = DataController.shared.container.viewContext
-        AddBookView(vm: DetailBookViewModel(context: viewContext))
-    }
-}

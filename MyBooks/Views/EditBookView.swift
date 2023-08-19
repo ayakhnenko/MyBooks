@@ -9,26 +9,17 @@ import SwiftUI
 
 struct EditBookView: View {
     
-    @ObservedObject private var detailBookVM: DetailBookViewModel
-    //@ObservedObject var book: Book
-    
-    init(vm: DetailBookViewModel) {
-         self.detailBookVM = vm
-     }
-   
-   @Environment(\.managedObjectContext) var viewContext
-   @Environment(\.dismiss) var dismiss
-
-   // var book: FetchedResults<Book>.Element
-    
-
+    @Environment(\.managedObjectContext) var viewContext
+    @Environment(\.dismiss) var dismiss
+    @ObservedObject var vm: BookListViewModel
+    var book: BookModel
    @State private var imagePicker = false
-
+    
     var body: some View {
-       VStack {
+        Form {
             Section {
                 HStack {
-                    Image(uiImage: detailBookVM.image)
+                    Image(uiImage: book.image)
                         .resizable()
                         .scaledToFit()
                         .edgesIgnoringSafeArea(.all)
@@ -36,81 +27,96 @@ struct EditBookView: View {
                         .shadow(radius: 10)
                         .padding(15)
                         .onAppear {
-                            detailBookVM.image = UIImage(data: (detailBookVM.book!.image!))!
+                            vm.image = book.image
+                            
                         }
                     Button {
                         imagePicker.toggle()
                     } label: {
                         Text("Змінити світлину")
                     }.sheet(isPresented: $imagePicker) {
-                        ImagePickerView(selectedImage: $detailBookVM.image)
+                        ImagePickerView(selectedImage: $vm.image)
                     }
                 }
             }
             Section {
-                TextField((detailBookVM.book!.name)!, text: $detailBookVM.name)
+                TextField((book.name), text: $vm.name)
                     .onAppear {
-                        detailBookVM.name = detailBookVM.book!.name ?? ""
+                        vm.name = book.name
                     }
-                TextField((detailBookVM.author), text: $detailBookVM.author)
+                TextField((book.author), text: $vm.author)
                     .onAppear {
-                        detailBookVM.author = detailBookVM.book?.author ?? ""
+                        vm.author = book.author
                     }
                 
-                TextEditor(text: $detailBookVM.comments)
+                TextEditor(text: $vm.comments)
                     .onAppear {
-                        detailBookVM.comments = detailBookVM.book?.comments ?? ""
+                        vm.comments = book.comments
                     }
                     .lineLimit(nil)
             }
             Section {
-                DatePicker("Початок читання", selection: ($detailBookVM.startDate), displayedComponents: [.date])
+                DatePicker("Початок читання", selection: ($vm.startDate), displayedComponents: [.date])
                     .onAppear {
-                        detailBookVM.startDate = detailBookVM.book?.startDate ?? Date()
+                        vm.startDate = book.startDate
                     }
-                DatePicker("Кінець читання", selection: $detailBookVM.finishDate, displayedComponents: [.date])
+                DatePicker("Кінець читання", selection: $vm.finishDate, displayedComponents: [.date])
                     .onAppear {
-                        detailBookVM.finishDate = detailBookVM.book?.finishDate ?? Date()
+                        vm.finishDate = book.finishDate
                     }
             }
             Section {
-                Toggle(isOn: $detailBookVM.readingNow) {
-                    Text("Читаю зараз")
-                }.onAppear {
-                    detailBookVM.readingNow = detailBookVM.book!.readingNow
-                }
-                VStack {
-                    Toggle(isOn: $detailBookVM.isFavourite) {
-                        Text("Улюблена книга ❤️")
-                    }
+                Toggle("Читаю зараз", isOn: $vm.readingNow)
                     .onAppear {
-                        detailBookVM.isFavourite = detailBookVM.book!.isFavourite
+                        vm.readingNow = book.readingNow
                     }
-                    RatingView(range: $detailBookVM.range)
+                    Toggle("Улюблена книга ❤️", isOn: $vm.isFavourite)
+                        .onAppear {
+                            vm.isFavourite = book.isFavourite
+                        }
+                Toggle("Не дочитала", isOn: $vm.isNotFinish)
                     .onAppear {
-                        detailBookVM.range = Int(detailBookVM.book!.range)
+                        vm.isNotFinish = book.isNotFinish
                     }
+                HStack {
+                    Spacer()
+                    RatingView(range: $vm.range)
+                        .onAppear {
+                            vm.range = Int(book.range)
+                        }
+                    Spacer()
                 }
-                .padding()
+                    
+
             }
-      
+            
             Section {
                 HStack {
                     Spacer()
                     Button("Зберегти 📚") {
-                        detailBookVM.editBook(book: detailBookVM.book!, name: detailBookVM.name, image: detailBookVM.image, author: detailBookVM.author, startDate: detailBookVM.startDate, comments: detailBookVM.comments, finishDate: detailBookVM.finishDate, isFavourite: detailBookVM.isFavourite, readingNow: detailBookVM.readingNow, range: Int(detailBookVM.range))
+                        vm.editBook(book: book.book, name: vm.name, image: vm.image, author: vm.author, startDate: vm.startDate, comments: vm.comments, finishDate: vm.finishDate, isFavourite: vm.isFavourite, readingNow: vm.readingNow, range: Int(vm.range), isNotFinish: vm.isNotFinish)
                         self.dismiss()
+                        
                     }
                     Spacer()
                 }
             }
+//            Section {
+//                HStack {
+//                    Spacer()
+//                    Button {
+//                        vm.deleteBook(bookId: (vm.book.id))
+//                        vm.dismiss()
+//                    } label: {
+//                        Image(systemName: "trash")
+//                            .foregroundColor(.red)
+//                    }
+//                    Spacer()
+//
+//
+//                }
+//            }
         }
     }
 }
 
-//struct EditBookView_Previews: PreviewProvider {
-//    static var previews: some View {
-//        let viewContext = DataController.shared.container.viewContext
-//        EditBookView(vm: EditBookViewModel(context: viewContext), book: book)
-//    }
-//}

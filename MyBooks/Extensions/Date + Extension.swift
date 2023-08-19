@@ -31,5 +31,13 @@ extension Date {
            formatter.dateFormat = "MMMM yyyy"
            return formatter.string(from: self)
        }
+    
+    func dateYear() -> String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.calendar = Calendar(identifier: .gregorian)
+        dateFormatter.dateFormat = "YYYY"
+        let yearToString = dateFormatter.string(from: self)
+        return yearToString
+    }
 
 }

@@ -13,15 +13,9 @@ extension Book: BaseModel {
     
     static var all: NSFetchRequest<Book> {
         let request = Book.fetchRequest()
-        request.sortDescriptors = []
+        request.sortDescriptors = [NSSortDescriptor(key: "startDate", ascending: false)]
         return request
     }
     
-    static var favBooks: NSFetchRequest<Book> {
-           let request = Book.fetchRequest()
-           request.predicate = NSPredicate(format: "isFavourite == true")
-           request.sortDescriptors = []
-   
-           return request
-       }
+
 }

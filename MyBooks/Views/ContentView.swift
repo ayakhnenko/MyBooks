@@ -9,36 +9,41 @@ import SwiftUI
 import CoreData
 
 struct ContentView: View {
-    
+  
     @Environment(\.managedObjectContext) var viewContext
-   // @FetchRequest(sortDescriptors: [SortDescriptor(\.finishDate, order: .reverse)]) var book: FetchedResults<Book>
-    @StateObject private var viewModel = DataController.shared
+    let views = ["Книжки", "Улюблені книжки"]
     
-    @State private var selectedView = 1
+    @State private var selectedView: Int = 0
     
     var body: some View {
-        TabView(selection: $selectedView) {
-            BookList(vm: BookListViewModel(context: viewContext))
-                .tabItem {
-                    Image(systemName: "book.fill")
-                    Text("Книжки")
-                }.tag(1)
+        
+        VStack {
+            Picker(selection: $selectedView, label: Text("")) {
+                ForEach(0..<2) { view in
+                    Text(self.views[view])
+                }
+            }.pickerStyle(SegmentedPickerStyle())
+                .padding(5)
             
-//            FavouriteBookList()
-//                .tabItem {
-//                    Image(systemName: "heart.fill")
-//                    Text("Улюблене")
-//                }.tag(2)
-//
-       }
-        
+            
+            if selectedView == 0 {
+                BookList(vm: BookListViewModel(context: viewContext))
+                
+            }
+            else if selectedView == 1 {
+                FavouriteBookList2(vm: BookListViewModel(context: viewContext))
+            }
+            
+        }.background(Color.mint)
     }
-        
-    }
+}
+
+
 
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView()
+            
     }
 }
